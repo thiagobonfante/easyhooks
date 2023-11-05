@@ -1,50 +1,69 @@
 # frozen_string_literal: true
 
-begin
-  require 'rubygems'
-  require 'active_support'
-  require 'active_record'
-  require 'easyhooks/specification'
-  ActiveRecord::Base
+require 'rubygems'
+require 'active_support'
+require 'active_record'
+require 'active_job'
+require 'easyhooks/specification'
+require 'easyhooks/post_processor'
 
-  module Easyhooks
-    extend ActiveSupport::Concern
-    module ClassMethods
-      attr_reader :easyhooks_spec
+module Easyhooks
 
-      def easyhooks(&specification)
-        assign_easyhooks Specification.new(self, &specification)
-      end
+  module ClassMethods
+    attr_reader :easyhooks_spec
 
-      private
-
-      def assign_easyhooks(specification_object)
-        @easyhooks_spec = specification_object
-      end
+    def easyhooks(&specification)
+      assign_easyhooks Specification.new(&specification)
     end
 
-    module InstanceMethods
-      def hello
-        puts 'hello'
-      end
-
-      def actions
-        self.class.easyhooks_spec.actions
-      end
+    def easyhooks_triggers
+      @easyhooks_spec.triggers
     end
 
-    def self.included(klass)
-      # check if the klass extends from ActiveRecord::Base, if not raise an error
-      unless klass.ancestors.include?(ActiveRecord::Base)
-        raise "Easyhooks can only be included in classes that extend from ActiveRecord::Base"
-      end
+    private
 
-      klass.send :include, InstanceMethods
-
-      klass.extend ClassMethods
+    def assign_easyhooks(specification_object)
+      @easyhooks_spec = specification_object
     end
   end
-rescue LoadError
-  # ActiveRecord is not available, do nothing or raise an error
-  puts "error"
+
+  module InstanceMethods
+    extend ActiveSupport::Concern
+
+    included do
+      after_commit :actions
+    end
+
+    private
+
+    def actions
+      self.class.easyhooks_spec.actions.each do |action_name, action|
+        puts "checking action: #{action_name}"
+        action.fields.each do |field|
+          puts "checking field: #{field}"
+          if self.previous_changes.has_key?(field)
+            puts "field changed: #{field}"
+            action.triggers.each do |trigger|
+              # serialize self to json and pass it to the post processor
+              json = self.to_json
+              PostProcessor.perform_later(self.class.name, json, trigger.name)
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def self.included(klass)
+    # check if the klass extends from ActiveRecord::Base, if not raise an error
+    unless klass.ancestors.include?(ActiveRecord::Base)
+      raise "Easyhooks can only be included in classes that extend from ActiveRecord::Base"
+    end
+
+    klass.send :include, InstanceMethods
+
+    klass.extend ClassMethods
+  end
 end
+
+ActiveRecord::Base.send(:include, Easyhooks)

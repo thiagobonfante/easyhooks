@@ -2,11 +2,13 @@
 
 module Easyhooks
   class Trigger
-    attr_accessor :name, :block
+    attr_accessor :name, :method, :endpoint, :event
 
-    def initialize(name, &block)
+    def initialize(name, method, endpoint, &event)
       @name = name
-      @block = block
+      @method = method
+      @endpoint = endpoint
+      @event = event
     end
   end
 end

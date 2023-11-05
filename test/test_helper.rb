@@ -6,6 +6,7 @@ SimpleCov.start do
 end
 
 require 'minitest/autorun'
+require 'active_job'
 require 'active_record'
 require 'easyhooks'
 
@@ -21,7 +22,11 @@ class << Minitest::Test
   end
 end
 
-class ActiveRecordTestCase < Minitest::Test
+class BaseTest < Minitest::Test
+  include ActiveJob::TestHelper
+end
+
+class ActiveRecordTestCase < BaseTest
   def exec(sql)
     ActiveRecord::Base.connection.execute sql
   end
@@ -31,9 +36,6 @@ class ActiveRecordTestCase < Minitest::Test
       :adapter => "sqlite3",
       :database  => ":memory:" #"tmp/test"
     )
-
-    # eliminate ActiveRecord warning. TODO: delete as soon as ActiveRecord is fixed
-    ActiveRecord::Base.connection.reconnect!
   end
 
   def teardown

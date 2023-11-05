@@ -27,6 +27,7 @@ Gem::Specification.new do |gem|
 
   gem.required_ruby_version = '>= 3.1'
   gem.add_runtime_dependency 'activerecord', rails_versions
+  gem.add_runtime_dependency 'activejob', rails_versions
 
   gem.add_development_dependency 'bundler',       '~> 2.0'
   gem.add_development_dependency 'minitest',      '~> 5.11'

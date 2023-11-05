@@ -3,10 +3,9 @@ require File.join(File.dirname(__FILE__), 'test_helper')
 ActiveRecord::Migration.verbose = false
 
 class Order < ActiveRecord::Base
-  include Easyhooks
   easyhooks do
     action :submitted, fields: [:name] do
-      trigger :accept do
+      trigger :field_changes, method: :post, endpoint: 'https://webhook.site/4bba3b1d-5ac4-47bc-b860-68e6801ae67e' do
         puts 'accept'
       end
     end
@@ -29,8 +28,17 @@ class MainTest < ActiveRecordTestCase
   end
 
   test 'should include an order and check that sqlite is working' do
+    assert_enqueued_jobs 0
     o = Order.all.first
     assert 'some order', o.name
+
+    o.name = 'name has changed'
+    o.save!
+    assert_enqueued_jobs 1, only: Easyhooks::PostProcessor
+
+    perform_enqueued_jobs
+
+    assert_performed_jobs 1, only: Easyhooks::PostProcessor
   end
 
   test 'should raise exception when include easyhooks without active record' do
