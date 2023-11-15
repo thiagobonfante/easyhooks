@@ -40,7 +40,7 @@ end
 
 class Vendor < ActiveRecord::Base
   easyhooks do
-    action :approved, fields: [:name] do
+    action :approved, on: %i[create update], only: :name do
       trigger :my_yaml_trigger
       trigger :my_db_trigger, type: :stored
     end
@@ -50,7 +50,8 @@ end
 class User < ActiveRecord::Base
   easyhooks :stored do
     action :accepted, fields: [:name] do
-      trigger :my_db_trigger end
+      trigger :my_db_trigger
+    end
   end
 end
 
@@ -74,6 +75,7 @@ class ActiveRecordTestCase < BaseTest
   def clear_db
     Order.delete_all
     Vendor.delete_all
+    User.delete_all
     Easyhooks::StoredTrigger.delete_all
   end
 

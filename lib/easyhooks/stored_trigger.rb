@@ -14,7 +14,7 @@ end
 #
 #  id             :integer          not null, primary key
 #  name           :string           not null
-#  verb           :string           not null
+#  method         :string           not null
 #  endpoint       :string           not null
 #  created_at     :datetime
 #  updated_at     :datetime
