@@ -1,44 +1,33 @@
-require File.join(File.dirname(__FILE__), 'test_helper')
-
-ActiveRecord::Migration.verbose = false
-
-class Order < ActiveRecord::Base
-  easyhooks do
-    action :submitted, fields: [:name] do
-      trigger :field_changes, method: :post, endpoint: 'https://webhook.site/4bba3b1d-5ac4-47bc-b860-68e6801ae67e' do
-        puts 'accept'
-      end
-    end
-  end
-end
+require './test/test_helper'
 
 class MainTest < ActiveRecordTestCase
 
-  def setup
-    super
-
-    ActiveRecord::Schema.define do
-      create_table :orders do |t|
-        t.string :name, null: false
-        t.string :description, null: false
-      end
-    end
-
-    exec "INSERT INTO orders(name, description) VALUES('some order', 'some description')"
-  end
-
-  test 'should include an order and check that sqlite is working' do
-    assert_enqueued_jobs 0
+  test 'check if the post processor has been called with the proper params' do
     o = Order.all.first
     assert 'some order', o.name
 
+    expected_order = {
+      "name": 'name has changed',
+      "id": o.id,
+      "description": 'some description'
+    }
+    Easyhooks::PostProcessor.expects(:perform_later).with('Order', expected_order.to_json, :my_default_trigger)
+
     o.name = 'name has changed'
     o.save!
-    assert_enqueued_jobs 1, only: Easyhooks::PostProcessor
 
-    perform_enqueued_jobs
+    v = Vendor.all.first
+    assert 'some vendor', v.name
+    expected_vendor = {
+      "name": 'name has changed',
+      "id": v.id,
+      "description": 'some description'
+    }
+    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', expected_vendor.to_json, :my_yaml_trigger)
+    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', expected_vendor.to_json, :my_db_trigger)
 
-    assert_performed_jobs 1, only: Easyhooks::PostProcessor
+    v.name = 'name has changed'
+    v.save!
   end
 
   test 'should raise exception when include easyhooks without active record' do

@@ -8,7 +8,8 @@ module Easyhooks
     def perform(klass_name, json, trigger_name)
       klass = klass_name.constantize
       trigger = klass.easyhooks_triggers[trigger_name]
-      trigger.event.call
+      trigger.reload!
+      trigger.event.call unless trigger.event.nil?
 
       parsed_url = URI.parse(trigger.endpoint)
       http = Net::HTTP.new(parsed_url.host, parsed_url.port)

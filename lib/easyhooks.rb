@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rubygems'
+require 'rails'
 require 'active_support'
 require 'active_record'
 require 'active_job'
@@ -12,8 +13,8 @@ module Easyhooks
   module ClassMethods
     attr_reader :easyhooks_spec
 
-    def easyhooks(&specification)
-      assign_easyhooks Specification.new(&specification)
+    def easyhooks(type = :default, &specification)
+      assign_easyhooks Specification.new(type, &specification)
     end
 
     def easyhooks_triggers

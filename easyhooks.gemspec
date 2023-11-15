@@ -26,12 +26,13 @@ Gem::Specification.new do |gem|
   rails_versions = ['>= 6.0']
 
   gem.required_ruby_version = '>= 3.1'
+  gem.add_runtime_dependency 'rails', rails_versions
   gem.add_runtime_dependency 'activerecord', rails_versions
   gem.add_runtime_dependency 'activejob', rails_versions
 
   gem.add_development_dependency 'bundler',       '~> 2.0'
-  gem.add_development_dependency 'minitest',      '~> 5.11'
-  gem.add_development_dependency 'mocha',         '~> 1.8'
+  gem.add_development_dependency 'minitest',      '~> 5.20.0'
+  gem.add_development_dependency 'mocha',         '~> 2.1.0'
   gem.add_development_dependency 'rake',          '~> 12.3'
   gem.add_development_dependency 'rdoc',          '~> 6.1'
   gem.add_development_dependency 'sqlite3',       '~> 1.3'
