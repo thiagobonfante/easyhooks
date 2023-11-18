@@ -37,20 +37,63 @@ module Easyhooks
 
     private
 
+    def triggered_by
+      return :create if self.transaction_include_any_action?([:create])
+
+      return :update if self.transaction_include_any_action?([:update])
+
+      return :destroy if self.transaction_include_any_action?([:destroy])
+
+      :none
+    end
+
+    def perform_action_triggers(action)
+      action.triggers.each do |trigger|
+        puts "performing trigger: #{trigger.name}"
+        # serialize self to json and pass it to the post processor
+        json = self.to_json
+        PostProcessor.perform_later(self.class.name, json, trigger.name, triggered_by)
+      end
+    end
+
+    def execute_action(action)
+      puts "executing action: #{action.name}"
+      if action.only.empty?
+        perform_action_triggers(action)
+      else
+        action.only.each do |field|
+          perform_action_triggers(action) if self.previous_changes.has_key?(field)
+        end
+      end
+    end
+
     def actions
       self.class.easyhooks_spec.actions.each do |action_name, action|
         puts "checking action: #{action_name}"
-        action.fields.each do |field|
-          puts "checking field: #{field}"
-          if self.previous_changes.has_key?(field)
-            puts "field changed: #{field}"
-            action.triggers.each do |trigger|
-              # serialize self to json and pass it to the post processor
-              json = self.to_json
-              PostProcessor.perform_later(self.class.name, json, trigger.name)
-            end
-          end
-        end
+        execute_action(action) if self.transaction_include_any_action?(action.on)
+        # action.on.each do |on|
+        #   puts "checking on: #{on}"
+        #   # create a switch case for on checking values create update destroy
+        #   case on
+        #   when :create, transaction_include_any_action?([:create])
+        #     perform_action_triggers(action)
+        #   when :update
+        #     # check if self has just updated
+        #     if
+        #     if action.only.empty?
+        #       trigger_all(action)
+        #     else
+        #       action.only.each do |field|
+        #         trigger_all(action) if self.previous_changes.has_key?(field)
+        #       end
+        #     end
+        #   end
+        #   when :destroy
+        #     puts "got destroy"
+        #   else
+        #     puts "got else default"
+        #   end
+        # end
       end
     end
   end

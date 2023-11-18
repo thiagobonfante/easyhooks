@@ -4,6 +4,8 @@ html/
 *.gem
 *.rbc
 *.iml
+*.log
+*.txt
 .bundle
 .config
 .yardoc
@@ -12,6 +14,7 @@ InstalledFiles
 _yardoc
 coverage
 doc/
+log/
 lib/bundler/man
 pkg
 rdoc

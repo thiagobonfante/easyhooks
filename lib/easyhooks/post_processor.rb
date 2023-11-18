@@ -5,7 +5,8 @@ module Easyhooks
   class PostProcessor < ActiveJob::Base
     queue_as :easyhooks
 
-    def perform(klass_name, json, trigger_name)
+    def perform(klass_name, json, trigger_name, action_trigger)
+      puts "Performing #{klass_name} #{trigger_name} #{action_trigger}"
       klass = klass_name.constantize
       trigger = klass.easyhooks_triggers[trigger_name]
       trigger.reload!

@@ -29,7 +29,7 @@ end
 
 class Order < ActiveRecord::Base
   easyhooks do
-    action :submitted, fields: [:name] do
+    action :submitted, only: %i[name] do
       # this trigger is using the default configuration
       trigger :my_default_trigger, method: :post, endpoint: 'https://easyhooks.io/my_default_trigger' do
         puts 'trigger block called'
@@ -40,7 +40,7 @@ end
 
 class Vendor < ActiveRecord::Base
   easyhooks do
-    action :approved, on: %i[create update], only: :name do
+    action :approved, on: %i[create update], only: %i[name] do
       trigger :my_yaml_trigger
       trigger :my_db_trigger, type: :stored
     end
@@ -49,7 +49,7 @@ end
 
 class User < ActiveRecord::Base
   easyhooks :stored do
-    action :accepted, fields: [:name] do
+    action :accepted, on: %i[destroy] do
       trigger :my_db_trigger
     end
   end

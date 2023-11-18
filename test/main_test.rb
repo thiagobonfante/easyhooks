@@ -11,7 +11,7 @@ class MainTest < ActiveRecordTestCase
       "id": o.id,
       "description": 'some description'
     }
-    Easyhooks::PostProcessor.expects(:perform_later).with('Order', expected_order.to_json, :my_default_trigger)
+    Easyhooks::PostProcessor.expects(:perform_later).with('Order', expected_order.to_json, :my_default_trigger, :update)
 
     o.name = 'name has changed'
     o.save!
@@ -23,11 +23,23 @@ class MainTest < ActiveRecordTestCase
       "id": v.id,
       "description": 'some description'
     }
-    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', expected_vendor.to_json, :my_yaml_trigger)
-    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', expected_vendor.to_json, :my_db_trigger)
+    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', expected_vendor.to_json, :my_yaml_trigger, :update)
+    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', expected_vendor.to_json, :my_db_trigger, :update)
 
     v.name = 'name has changed'
     v.save!
+
+    u = User.all.first
+    u.name = 'some name changed'
+    u.save!
+
+    expected_user = {
+      "name": 'some name changed',
+      "id": u.id,
+      "email": 'some@email.com'
+    }
+    Easyhooks::PostProcessor.expects(:perform_later).with('User', expected_user.to_json, :my_db_trigger, :destroy)
+    u.destroy!
   end
 
   test 'should raise exception when include easyhooks without active record' do
