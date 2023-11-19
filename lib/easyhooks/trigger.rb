@@ -3,13 +3,15 @@ require 'easyhooks/stored_trigger'
 
 module Easyhooks
   class Trigger
-    attr_accessor :name, :method, :endpoint, :type, :event
+    attr_accessor :name, :method, :endpoint, :type, :condition, :event_callable, :event
 
-    def initialize(name, type, method, endpoint, &event)
+    def initialize(name, type, method, endpoint, condition, &event)
       @name = validate_name(name)
       @type = validate_type(type)
       @method = validate_method(method)
       @endpoint = validate_endpoint(endpoint)
+      @condition = validate_condition(condition)
+      @event_callable = "#{name}_event".to_sym
       @event = event
     end
 
@@ -17,10 +19,23 @@ module Easyhooks
       return if self.type == :default
 
       stored_trigger = StoredTrigger.find_by(name: self.name)
-      if stored_trigger.present?
-        #noinspection RubyArgCount
-        self.method = validate_method(stored_trigger.method)
-        self.endpoint = validate_endpoint(stored_trigger.endpoint)
+
+      raise "Trigger '#{self.name}' not found in database" unless stored_trigger.present?
+
+      #noinspection RubyArgCount
+      self.method = validate_method(stored_trigger.method)
+      self.endpoint = validate_endpoint(stored_trigger.endpoint)
+    end
+
+    def condition_applicable?(object)
+      if condition
+        if condition.is_a?(Symbol)
+          object.send(condition)
+        else
+          condition.call(object)
+        end
+      else
+        true
       end
     end
 
@@ -57,6 +72,14 @@ module Easyhooks
       raise "Trigger endpoint can't be nil" unless endpoint.present?
       raise "Trigger endpoint is not a valid URL: #{endpoint}" unless valid_url?(endpoint)
       endpoint
+    end
+
+    def validate_condition(condition)
+      if condition.nil? || condition.is_a?(Symbol) || condition.respond_to?(:call)
+        condition
+      else
+        raise TypeError, "Invalid attribute 'if' for Trigger #{@name}: condition must be nil, an instance method name symbol or a callable (eg. a proc or lambda)"
+      end
     end
   end
 end

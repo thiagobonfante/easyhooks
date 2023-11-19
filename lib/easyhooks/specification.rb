@@ -21,7 +21,7 @@ module Easyhooks
     private
 
     def action(name, args, &triggers)
-      new_action = Easyhooks::Action.new(name, args[:on], args[:only], &triggers)
+      new_action = Easyhooks::Action.new(name, args[:on], args[:only], args[:if], &triggers)
       @actions[name] = new_action
       @scoped_action = new_action
       instance_eval(&triggers) if triggers
@@ -31,10 +31,10 @@ module Easyhooks
       type = args[:type] || @type || :default
       method = config_lookup(name, type, args, :method)&.downcase&.to_sym
       endpoint = config_lookup(name, type, args, :endpoint)
-      new_trigger = Easyhooks::Trigger.new(name, type, method, endpoint, &event)
+      new_trigger = Easyhooks::Trigger.new(name, type, method, endpoint, args[:if], &event)
       @triggers[name] = new_trigger
       @scoped_trigger = new_trigger
-      @scoped_action.triggers.push(new_trigger)
+      @scoped_action.add_trigger(new_trigger)
     end
 
     def names

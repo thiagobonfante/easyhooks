@@ -29,12 +29,28 @@ end
 
 class Order < ActiveRecord::Base
   easyhooks do
-    action :submitted, only: %i[name] do
+    action :submitted, only: %i[name description], if: :check_id do
       # this trigger is using the default configuration
-      trigger :my_default_trigger, method: :post, endpoint: 'https://easyhooks.io/my_default_trigger' do
+      trigger :my_default_trigger, if: :check_name, method: :post, endpoint: 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894' do |response|
         puts 'trigger block called'
+
+        puts "Order ID: #{self.id}"
+        puts response.to_json
+        if response.code == '200'
+          puts 'success'
+        else
+          puts 'failure'
+        end
       end
     end
+  end
+
+  def check_id
+    self.id == 1
+  end
+
+  def check_name
+    self.name == 'some order'
   end
 end
 
