@@ -81,7 +81,16 @@ module Easyhooks
 
     def make_request(request)
       request.body = @payload
-      request['Content-Type'] = 'application/json'
+      request.add_field('Content-Type', 'application/json')
+
+      # add headers
+      @trigger.headers.each do |key, value|
+        request.add_field(key, value)
+      end
+
+      # adds auth (bearer or basic)
+      request.add_field('Authorization', @trigger.auth) if @trigger.auth.present?
+
       @response = @http.request(request)
     end
 

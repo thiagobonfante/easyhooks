@@ -1,22 +1,16 @@
 # frozen_string_literal: true
 
-require 'easyhooks/concerns/helpers'
-require 'easyhooks/concerns/validators'
+require 'easyhooks/base'
 
 module Easyhooks
-  class Action
-    include Easyhooks::Helpers
-    include Easyhooks::Validators
+  class Action < Easyhooks::Base
 
-    attr_accessor :name, :on, :only, :condition, :payload, :on_fail, :triggers
+    attr_accessor :on, :only, :triggers
 
-    def initialize(name, on, only, condition, payload, on_fail)
-      @name = validate_name(name)
+    def initialize(name, on, only, condition, payload, on_fail, auth = nil, headers = {})
+      super(name, condition, payload, on_fail, auth, headers)
       @on = validate_on(on)
       @only = validate_only(only)
-      @condition = validate_callback(condition, 'condition')
-      @payload = validate_callback(payload, 'payload')
-      @on_fail = validate_callback(on_fail, 'on_fail')
       @triggers = []
     end
 

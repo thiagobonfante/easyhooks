@@ -10,17 +10,13 @@ module Easyhooks
     include Easyhooks::Helpers
     include Easyhooks::Validators
 
-    attr_accessor :type, :actions, :triggers, :method, :endpoint, :payload, :on, :only, :condition, :scoped_action, :on_fail, :scoped_trigger
+    attr_accessor :type, :actions, :triggers, :method, :endpoint, :scoped_action, :on_fail, :scoped_trigger
 
     def initialize(type, args = {}, &specification)
       @type = type
+      @global_args = args
       @method = args[:method]
       @endpoint = args[:endpoint]
-      @payload = args[:payload]
-      @on = args[:on]
-      @only = args[:only]
-      @condition = args[:if]
-      @on_fail = args[:on_fail]
       @actions = {}
       @triggers = {}
       instance_eval(&specification)
@@ -33,24 +29,34 @@ module Easyhooks
     private
 
     def action(name, args = {}, &triggers)
-      on = args[:on] || validate_on(@on)
-      only = args[:only] || validate_only(@only)
-      condition = args[:if] || validate_callback(@condition, 'condition')
-      payload = args[:payload] || validate_callback(@payload, 'payload')
-      on_fail = args[:on_fail] || validate_callback(@on_fail, 'on_fail')
-      new_action = Easyhooks::Action.new(name, on, only, condition, payload, on_fail, &triggers)
+      # search and collect existing arguments
+      on = args[:on] || validate_on(@global_args[:on])
+      only = args[:only] || validate_only(@global_args[:only])
+      condition = args[:if] || validate_callback(@global_args[:if], 'if')
+      payload = args[:payload] || validate_callback(@global_args[:payload], 'payload')
+      on_fail = args[:on_fail] || validate_callback(@global_args[:on_fail], 'on_fail')
+      auth = args[:auth] || validate_auth(@global_args[:auth])
+      headers = args[:headers] || validate_headers(@global_args[:headers])
+
+      # create the action
+      new_action = Easyhooks::Action.new(name, on, only, condition, payload, on_fail, auth, headers)
       @actions[name] = new_action
       @scoped_action = new_action
       instance_eval(&triggers) if triggers
     end
 
     def trigger(name, args = {}, &event)
+      # search and collect existing arguments
       type = args[:type] || validate_type(@type)
       method = config_lookup(name, type, args, :method)&.downcase&.to_sym
       endpoint = config_lookup(name, type, args, :endpoint)
       payload = args[:payload] || @scoped_action.payload
       on_fail = args[:on_fail] || @scoped_action.on_fail
-      new_trigger = Easyhooks::Trigger.new(name, @scoped_action.name, type, method, endpoint, args[:if], payload, on_fail, &event)
+      auth = args[:auth] || @scoped_action.auth
+      headers = args[:headers] || @scoped_action.headers
+
+      # create the trigger
+      new_trigger = Easyhooks::Trigger.new(name, @scoped_action.name, type, method, endpoint, args[:if], payload, on_fail, auth, headers, &event)
       @triggers[name] = new_trigger
       @scoped_trigger = new_trigger
       @scoped_action.add_trigger(new_trigger)

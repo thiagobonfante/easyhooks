@@ -190,7 +190,7 @@ class TriggerTest < ActiveRecordTestCase
         nil
       )
     end
-    assert_equal "Invalid attribute 'condition' for Easyhooks::Trigger users: condition must be nil, an instance method name symbol or a callable (eg. a proc or lambda)", error.message
+    assert_equal "Invalid attribute 'if' for Easyhooks::Trigger users: if must be nil, an instance method name symbol or a callable (eg. a proc or lambda)", error.message
   end
 
   test 'should validate trigger payload' do

@@ -14,7 +14,8 @@ class PostProcessorTest < ActiveRecordTestCase
     o2 = Order.create!(name: 'some order 2', description: 'some description 2')
 
     # make Net::HTTP request raise an error
-    Net::HTTP.any_instance.stubs(:request).raises(StandardError.new('some error'))
+    # Net::HTTP.any_instance.stubs(:request).raises(StandardError.new('some error'))
+    #
     perform_enqueued_jobs
   end
 

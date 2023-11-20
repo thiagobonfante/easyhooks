@@ -63,6 +63,20 @@ module Easyhooks
           raise TypeError, "Invalid attribute '#{attribute}' for #{self.class} #{@name}: #{attribute} must be nil, an instance method name symbol or a callable (eg. a proc or lambda)"
         end
       end
+
+      def validate_auth(auth)
+        return nil if auth.nil?
+        # validate if auth header is a string and it must be a Bearer token or a Basic auth to include into a HTTP request
+        raise TypeError, "Invalid attribute 'auth_header' for #{self.class} #{@name}: #{auth} must be nil or a string" unless auth.is_a?(String)
+        raise TypeError, "Invalid attribute 'auth_header' for #{self.class} #{@name}: #{auth} must be a Bearer token or a Basic auth" unless auth =~ /\ABearer\s/ || auth =~ /\ABasic\s/
+        auth
+      end
+
+      def validate_headers(headers)
+        return {} if headers.nil?
+        raise TypeError, "Invalid attribute 'headers' for #{self.class} #{@name}: #{headers} must be nil or a hash" unless headers.is_a?(Hash)
+        headers
+      end
     end
   end
 end

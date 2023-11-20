@@ -36,7 +36,7 @@ class ApplicationRecord < ActiveRecord::Base
 end
 
 class Order < ApplicationRecord
-  easyhooks method: :post, endpoint: 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894', payload: :payload do
+  easyhooks method: :post, endpoint: 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894', auth: 'Bearer token', headers: { 'X-Easy': 'Easyhooks' }, payload: :payload do
     action :submitted, only: %i[name description], if: :check_id do
       # this trigger is using the default configuration
       trigger :my_default_trigger, if: :check_name, on_fail: :failed_trigger do |response|

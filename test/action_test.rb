@@ -83,7 +83,7 @@ class ActionTest < Minitest::Test
         nil
       )
     end
-    assert_equal "Invalid attribute 'condition' for Easyhooks::Action submit: condition must be nil, an instance method name symbol or a callable (eg. a proc or lambda)", error.message
+    assert_equal "Invalid attribute 'if' for Easyhooks::Action submit: if must be nil, an instance method name symbol or a callable (eg. a proc or lambda)", error.message
   end
 
   test 'should validate action payload' do
