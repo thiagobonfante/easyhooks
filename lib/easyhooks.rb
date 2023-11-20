@@ -13,8 +13,12 @@ module Easyhooks
   module ClassMethods
     attr_reader :easyhooks_spec
 
-    def easyhooks(type = :default, &specification)
-      assign_easyhooks Specification.new(type, &specification)
+    def easyhooks(type = :default, args = {}, &specification)
+      if type.is_a?(Hash)
+        args = type
+        type = :default
+      end
+      assign_easyhooks Specification.new(type, args, &specification)
     end
 
     def easyhooks_triggers
@@ -30,6 +34,10 @@ module Easyhooks
         module_eval do
           define_method trigger.event_callable do |response_data|
             instance_exec(response_data, &trigger.event)
+          end
+
+          define_method trigger.on_fail_callable do |error|
+            send(trigger.on_fail, error)
           end
         end
       end
@@ -59,8 +67,8 @@ module Easyhooks
       action.triggers.each do |trigger|
         next unless trigger.condition_applicable?(self)
         puts "performing trigger: #{trigger.name}"
-        payload = triggered_by == :destroy ? { id: self.id }.to_json : self.to_json
-        PostProcessor.perform_later(self.class.name, payload, trigger.name, triggered_by)
+        payload = trigger.request_payload(self).to_json
+        PostProcessor.perform_later(self.class.name, self.id, payload, trigger.name, triggered_by)
       end
     end
 
