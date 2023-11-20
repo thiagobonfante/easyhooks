@@ -20,7 +20,7 @@ class ActionTest < Minitest::Test
 
   test 'should validate action name' do
     error = assert_raises(TypeError) do
-      action = Easyhooks::Action.new(
+      Easyhooks::Action.new(
         'submit$',
         nil,
         nil,
@@ -57,7 +57,7 @@ class ActionTest < Minitest::Test
         nil
       )
     end
-    assert_equal 'Invalid attribute \'on\' for Easyhooks::Action submit: [:created]. Allowed values are: [:create, :update, :destroy]', error.message
+    assert_equal "Invalid attribute 'on' for Easyhooks::Action submit: [\"created\"]. Allowed values are: [:create, :update, :destroy]", error.message
   end
 
   test 'should return action only default blank array if nil' do

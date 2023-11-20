@@ -46,7 +46,7 @@ module Easyhooks
         on = [on] unless on.is_a?(Array)
         on.map do |value|
           raise TypeError, "Invalid attribute 'on' for #{self.class} #{@name}: #{on}. Allowed values are: #{ALLOWED_ON_VALUES}" unless ALLOWED_ON_VALUES.include?(value.to_sym)
-          value.to_sym
+          value
         end
       end
 
