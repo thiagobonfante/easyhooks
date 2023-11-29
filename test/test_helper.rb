@@ -37,9 +37,9 @@ end
 
 class Order < ApplicationRecord
   easyhooks method: :post, endpoint: 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894', auth: 'Bearer token', headers: { 'X-Easy': 'Easyhooks' }, payload: :payload do
-    action :submitted, only: %i[name description], if: :check_id do
+    trigger :submitted do
       # this trigger is using the default configuration
-      trigger :my_default_trigger, if: :check_name, on_fail: :failed_trigger do |response|
+      action :my_default_action, if: :check_name, on_fail: :failed_action, method: :get do |response|
         puts 'trigger block called'
 
         puts "Order ID: #{self.id}"
@@ -51,11 +51,12 @@ class Order < ApplicationRecord
         end
         log_something
       end
+      action :nova, if: :valid_id, method: :put, auth: 'Bearer token 2'
     end
   end
 
-  def failed_trigger(error)
-    puts "failed_trigger called with error: #{error}"
+  def failed_action(error)
+    puts "failed_action called with error: #{error}"
   end
 
   def payload
@@ -69,6 +70,10 @@ class Order < ApplicationRecord
     }
   end
 
+  def valid_id
+    self.id == 2
+  end
+
   def check_id
     self.id == 1
   end
@@ -80,17 +85,17 @@ end
 
 class Vendor < ActiveRecord::Base
   easyhooks do
-    action :approved, on: %i[create update], only: %i[name] do
-      trigger :my_yaml_trigger
-      trigger :my_db_trigger, type: :stored
+    trigger :approved, on: %i[create update], only: %i[name] do
+      action :my_yaml_action, method: 'PUT'
+      action :my_db_action, type: :stored
     end
   end
 end
 
 class User < ActiveRecord::Base
   easyhooks :stored do
-    action :accepted, on: %i[destroy] do
-      trigger :my_db_trigger
+    trigger :accepted, on: %i[destroy] do
+      action :my_db_action
     end
   end
 end
@@ -109,14 +114,16 @@ class ActiveRecordTestCase < BaseTest
     exec "INSERT INTO orders(name, description) VALUES('some order', 'some description')"
     exec "INSERT INTO vendors(name, description) VALUES('some vendor', 'some description')"
     exec "INSERT INTO users(name, email) VALUES('some name', 'some@email.com')"
-    exec "INSERT INTO easyhooks_stored_triggers(name, method, endpoint) VALUES('my_db_trigger', 'post', 'https://easyhooks.io/my_db_trigger')"
+    exec "INSERT INTO easyhooks_store(context, name, method, endpoint) VALUES('global', 'my_db_action', 'post', 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894')"
+    exec "INSERT INTO easyhooks_store_values(context, key, value, store_id) VALUES('auth', 'Bearer', 'token-db', 1)"
+    exec "INSERT INTO easyhooks_store_values(context, key, value, store_id) VALUES('headers', 'X-DB', 'XX-DB-VALUE', 1)"
   end
 
   def clear_db
     Order.delete_all
     Vendor.delete_all
     User.delete_all
-    Easyhooks::StoredTrigger.delete_all
+    Easyhooks::Store.delete_all
   end
 
   def setup_db

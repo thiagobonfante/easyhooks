@@ -20,6 +20,7 @@ module Easyhooks
       def validate_method(method)
         return nil if method.nil? && @type == :stored # this will be loaded by the processor
         return :post unless method.present?
+        method = method.downcase if method.is_a?(String)
         raise TypeError, "Invalid method '#{method}' for #{self.class} '#{@name}'. Allowed values are: #{ALLOWED_METHODS}" unless ALLOWED_METHODS.include?(method.to_sym)
         method.to_sym
       end
@@ -74,8 +75,18 @@ module Easyhooks
 
       def validate_headers(headers)
         return {} if headers.nil?
+        headers = JSON.parse(headers.gsub(':', '').gsub('=>', ':')) if headers.is_a?(String)
         raise TypeError, "Invalid attribute 'headers' for #{self.class} #{@name}: #{headers} must be nil or a hash" unless headers.is_a?(Hash)
         headers
+      end
+
+      def validate_hook(hook)
+        return hook if hook.nil? && @type == :stored
+        hook.method = validate_method(hook.method)
+        hook.endpoint = validate_endpoint(hook.endpoint)
+        hook.auth = validate_auth(hook.auth)
+        hook.headers = validate_headers(hook.headers)
+        hook
       end
     end
   end

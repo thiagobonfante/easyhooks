@@ -8,15 +8,15 @@ module Easyhooks
     include Easyhooks::Helpers
     include Easyhooks::Validators
 
-    attr_accessor :name, :condition, :payload, :on_fail, :auth, :headers
+    attr_accessor :name, :type, :hook, :condition, :payload, :on_fail
 
-    def initialize(name, condition, payload, on_fail, auth = nil, headers = {})
+    def initialize(name, type, hook, condition, payload, on_fail)
       @name = validate_name(name)
+      @type = validate_type(type)
+      @hook = hook
       @condition = validate_callback(condition, 'if')
       @payload = validate_callback(payload, 'payload')
       @on_fail = validate_callback(on_fail, 'on_fail')
-      @auth = validate_auth(auth)
-      @headers = validate_headers(headers)
     end
   end
 end

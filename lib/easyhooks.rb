@@ -18,11 +18,14 @@ module Easyhooks
         args = type
         type = :default
       end
-      assign_easyhooks Specification.new(type, args, &specification)
+      # get self.class replacing :: from the module::class name with _
+      # e.g. MyModule::MyClass becomes MyModule_MyClass
+      klass_name = self.name.to_s.gsub('::', '_')
+      assign_easyhooks Specification.new(klass_name, type, args, &specification)
     end
 
-    def easyhooks_triggers
-      @easyhooks_spec.triggers
+    def easyhooks_actions
+      @easyhooks_spec.actions
     end
 
     private
@@ -30,14 +33,14 @@ module Easyhooks
     def assign_easyhooks(specification_object)
       @easyhooks_spec = specification_object
 
-      @easyhooks_spec.triggers.each do |_, trigger|
+      @easyhooks_spec.actions.each do |_, action|
         module_eval do
-          define_method trigger.event_callable do |response_data|
-            instance_exec(response_data, &trigger.event)
+          define_method action.event_callable do |response_data|
+            instance_exec(response_data, &action.event) if action.event.present?
           end
 
-          define_method trigger.on_fail_callable do |error|
-            send(trigger.on_fail, error)
+          define_method action.on_fail_callable do |error|
+            send(action.on_fail, error)
           end
         end
       end
@@ -48,7 +51,7 @@ module Easyhooks
     extend ActiveSupport::Concern
 
     included do
-      after_commit :actions
+      after_commit :triggers
     end
 
     private
@@ -63,31 +66,31 @@ module Easyhooks
       :none
     end
 
-    def perform_action_triggers(action)
-      action.triggers.each do |trigger|
-        next unless trigger.condition_applicable?(self)
-        puts "performing trigger: #{trigger.name}"
-        payload = trigger.request_payload(self).to_json
-        PostProcessor.perform_later(self.class.name, self.id, payload, trigger.name, triggered_by)
+    def perform_trigger_actions(trigger)
+      trigger.actions.each do |action|
+        next unless action.condition_applicable?(self)
+        puts "performing action: #{action.name}"
+        payload = action.request_payload(self).to_json
+        PostProcessor.perform_later(self.class.name, self.id, payload, action.name, triggered_by)
       end
     end
 
-    def execute_action(action)
-      return unless action.condition_applicable?(self)
-      puts "executing action: #{action.name}"
-      if action.only.empty? || triggered_by == :destroy
-        perform_action_triggers(action)
+    def execute_trigger(trigger)
+      return unless trigger.condition_applicable?(self)
+      puts "executing trigger: #{trigger.name}"
+      if trigger.only.empty? || triggered_by == :destroy
+        perform_trigger_actions(trigger)
       else
-        action.only.each do |field|
-          perform_action_triggers(action) if self.previous_changes.has_key?(field)
+        trigger.only.each do |field|
+          perform_trigger_actions(trigger) if self.previous_changes.has_key?(field)
         end
       end
     end
 
-    def actions
-      self.class.easyhooks_spec.actions.each do |action_name, action|
-        puts "checking action: #{action_name}"
-        execute_action(action) if self.transaction_include_any_action?(action.on)
+    def triggers
+      self.class.easyhooks_spec.triggers.each do |trigger_name, trigger|
+        puts "checking trigger: #{trigger_name}"
+        execute_trigger(trigger) if self.transaction_include_any_action?(trigger.on)
       end
     end
   end

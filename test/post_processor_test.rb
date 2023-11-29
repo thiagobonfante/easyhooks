@@ -13,6 +13,8 @@ class PostProcessorTest < ActiveRecordTestCase
 
     o2 = Order.create!(name: 'some order 2', description: 'some description 2')
 
+    Vendor.create!(name: 'some vendor', description: 'some description')
+
     # make Net::HTTP request raise an error
     # Net::HTTP.any_instance.stubs(:request).raises(StandardError.new('some error'))
     #
