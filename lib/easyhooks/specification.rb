@@ -64,7 +64,7 @@ module Easyhooks
     def find_action_hook(name, type, args)
       hook_definition = Hook.new
       Hook::ATTRIBUTES.each do |field|
-        value = hook_lookup(:actions, name, type, args, field) || @scoped_trigger.hook.send(field) || hook_lookup(:global, name, type, args, field)
+        value = hook_lookup(:actions, name, type, args, field) || @scoped_trigger.hook.send(field)
         hook_definition.send("#{field}=".to_sym, value)
       end
       hook_definition
@@ -88,10 +88,6 @@ module Easyhooks
         value = config.dig(Rails.env, attr_type.to_s, attr_name.to_s, field.to_s)&.to_h
         return value if value.present?
       end
-
-      # return nil unless attr_type == :triggers
-      #
-      # raise ArgumentError, "Attribute :#{field} not found for #{attr_type}::#{attr_name}" if [:method, :endpoint].include?(field)
     end
 
     def config_file_exists?
