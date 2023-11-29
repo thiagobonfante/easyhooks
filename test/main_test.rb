@@ -2,43 +2,47 @@ require './test/test_helper'
 
 class MainTest < ActiveRecordTestCase
 
-  test 'check if the post processor has been called with the proper params' do
+  test 'should dispatch only order action my_default_action' do
     o = Order.all.first
     assert 'some order', o.name
 
-    expected_order = {
-      "name": 'name has changed',
-      "id": o.id,
-      "description": 'some description'
-    }
-    Easyhooks::PostProcessor.expects(:perform_later).with('Order', expected_order.to_json, :my_default_trigger, :update)
+    expected_payload = order_payload(o.id,'name has changed', o.description, Order.count).to_json
+    Easyhooks::PostProcessor.expects(:perform_later).with('Order', 1, expected_payload, :my_default_action, :update)
 
     o.name = 'name has changed'
     o.save!
+  end
 
-    v = Vendor.all.first
-    assert 'some vendor', v.name
-    expected_vendor = {
-      "name": 'name has changed',
-      "id": v.id,
-      "description": 'some description'
-    }
-    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', expected_vendor.to_json, :my_yaml_trigger, :update)
-    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', expected_vendor.to_json, :my_db_trigger, :update)
+  test 'should dispatch both order actions' do
 
-    v.name = 'name has changed'
+    expected_payload = order_payload(2, 'some other order', 'some other description', 2).to_json
+    Easyhooks::PostProcessor.expects(:perform_later).with('Order', 2, expected_payload, :my_default_action, :create)
+    Easyhooks::PostProcessor.expects(:perform_later).with('Order', 2, expected_payload, :my_other_action, :create)
+
+    Order.create!(name: 'some other order', description: 'some other description')
+  end
+
+  test 'should only dispatch vendor actions only if name has changed' do
+
+    v = Vendor.first
+    v.description = 'changed description'
     v.save!
+    Easyhooks::PostProcessor.expects(:perform_later).never
+  end
 
-    u = User.all.first
-    u.name = 'some name changed'
-    u.save!
+  test 'should dispatch vendor actions because name has changed' do
 
-    expected_user = {
-      "name": 'some name changed',
-      "id": u.id,
-      "email": 'some@email.com'
-    }
-    Easyhooks::PostProcessor.expects(:perform_later).with('User', expected_user.to_json, :my_db_trigger, :destroy)
+    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', 1, { id: 1 }.to_json, :my_yaml_action, :update).once
+    Easyhooks::PostProcessor.expects(:perform_later).with('Vendor', 1, { id: 1 }.to_json, :my_db_action, :update).once
+    v = Vendor.first
+    v.name = 'vendor name changed'
+    v.save!
+  end
+
+  test 'should dispatch user actions because is was destroyed' do
+
+    Easyhooks::PostProcessor.expects(:perform_later).with('User', 1, { id: 1 }.to_json, :my_db_action, :destroy).once
+    u = User.first
     u.destroy!
   end
 
@@ -49,5 +53,18 @@ class MainTest < ActiveRecordTestCase
       end
     end
     assert_equal 'Easyhooks can only be included in classes that extend from ActiveRecord::Base', error.message
+  end
+
+  private
+
+  def order_payload(id, name, description, count)
+    {
+      id: id,
+      name: name,
+      description: description,
+      metadata: {
+        count: count
+      }
+    }
   end
 end

@@ -6,8 +6,6 @@ module Easyhooks
     queue_as :easyhooks
 
     def perform(klass_name, object_id, payload, action_name, action_trigger)
-      puts "Performing #{klass_name} #{action_name} on #{action_trigger}"
-
       init_data(klass_name, object_id, payload, action_name, action_trigger)
       begin
         request = create_http_request

@@ -3,23 +3,23 @@
 
 test:                                                                         # environment
   global:                                                                     # global configuration
-    my_yaml_action: # action or trigger name                                 # action or trigger name
+    my_yaml_action: # action or trigger name                                  # action or trigger name
       method: 'POST'                                                          # webhook method
-      endpoint: 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894'   # webhook endpoint
+      endpoint: 'https://easyhooks.io/my_yaml_action'                         # webhook endpoint
       auth: 'Bearer global-declared'                                          # webhook auth
       headers:                                                                # webhook headers
         X-Vendor: 'test'
   classes:
     Vendor:                                                                   # class specific configuration
       method: 'POST'                                                          # webhook method
-      endpoint: 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894'   # webhook endpoint
+      endpoint: 'https://easyhooks.io/vendor'                                 # webhook endpoint
       auth: 'Bearer class-declared'                                           # webhook auth
       headers:                                                                # webhook headers
         X-Vendor: 'test'
   triggers:
     approved:                                                                 # action specific configuration
       method: 'POST'                                                          # webhook method
-      endpoint: 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894'   # webhook endpoint
+      endpoint: 'https://easyhooks.io/approved'                               # webhook endpoint
       auth: 'Bearer trigger-declared'                                         # webhook auth
       headers:                                                                # webhook headers
         X-Vendor: 'test'
@@ -27,8 +27,8 @@ test:                                                                         # 
   actions:
     my_yaml_action:                                                           # action specific configuration
       method: 'POST'                                                          # webhook method
-      endpoint: 'https://webhook.site/96c3627a-2abd-44ae-8c2c-97de179d7894'   # webhook endpoint
+      endpoint: 'https://easyhooks.io/my_yaml_action'                         # webhook endpoint
       auth: 'Bearer action-declared'                                          # webhook auth
       headers:                                                                # webhook headers
-            X-Vendor: 'test'
-            X-My-Header: 'my value'
+        X-Vendor: 'test'
+        X-My-Header: 'my value'

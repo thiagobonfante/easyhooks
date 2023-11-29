@@ -69,7 +69,6 @@ module Easyhooks
     def perform_trigger_actions(trigger)
       trigger.actions.each do |action|
         next unless action.condition_applicable?(self)
-        puts "performing action: #{action.name}"
         payload = action.request_payload(self).to_json
         PostProcessor.perform_later(self.class.name, self.id, payload, action.name, triggered_by)
       end
@@ -77,7 +76,6 @@ module Easyhooks
 
     def execute_trigger(trigger)
       return unless trigger.condition_applicable?(self)
-      puts "executing trigger: #{trigger.name}"
       if trigger.only.empty? || triggered_by == :destroy
         perform_trigger_actions(trigger)
       else
@@ -88,8 +86,7 @@ module Easyhooks
     end
 
     def triggers
-      self.class.easyhooks_spec.triggers.each do |trigger_name, trigger|
-        puts "checking trigger: #{trigger_name}"
+      self.class.easyhooks_spec.triggers.each do |_, trigger|
         execute_trigger(trigger) if self.transaction_include_any_action?(trigger.on)
       end
     end
