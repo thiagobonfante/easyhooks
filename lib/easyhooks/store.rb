@@ -10,6 +10,16 @@ module Easyhooks
 
     validates_presence_of :name, :method, :endpoint, :context
 
+    def add_headers(headers)
+      headers.each do |key, value|
+        values.create(context: 'headers', key: key, value: value)
+      end
+    end
+
+    def add_auth(type, auth)
+      values.create(context: 'auth', key: type, value: auth)
+    end
+
     def headers
       values.where(context: 'headers').map { |v| [v.key, v.value] }.to_h
     end
