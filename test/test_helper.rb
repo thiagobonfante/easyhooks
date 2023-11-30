@@ -13,7 +13,6 @@ require 'minitest/autorun'
 require 'active_job'
 require 'active_record'
 require 'mocha/minitest'
-require 'easyhooks'
 
 class << Minitest::Test
   def test(name, &block)
