@@ -8,11 +8,11 @@ Gem::Specification.new do |gem|
   gem.authors       = ['Thiago Bonfante']
   gem.email         = ['thiagobonfante@gmail.com']
   gem.description   = <<~DESC
-    Easyhooks is a simple gem to create hooks in your code.
+    Easyhooks is a simple gem to that allows you to create hooks in your ActiveRecord models.
   DESC
   gem.summary       = 'Easyhooks'
-  gem.licenses      = ['MIT']
-  gem.homepage      = 'https://github.com/thiagobonfante/easy_hooks'
+  gem.licenses      = ['Apache-2.0']
+  gem.homepage      = 'https://github.com/thiagobonfante/easyhooks'
 
   gem.files         = Dir['CHANGELOG.md', 'README.md', 'LICENSE', 'lib/**/*']
   gem.executables   = gem.files.grep(%r{^bin/}) { |f| File.basename(f) }
