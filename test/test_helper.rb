@@ -89,6 +89,8 @@ class User < ActiveRecord::Base
   end
 end
 
+class Company < ActiveRecord::Base; end
+
 class BaseTest < Minitest::Test
   include ActiveJob::TestHelper
 end
@@ -135,6 +137,11 @@ class ActiveRecordTestCase < BaseTest
       create_table :users do |t|
         t.string :name, null: false
         t.string :email, null: false
+      end
+
+      create_table :companies do |t|
+        t.string :name, null: false
+        t.string :domain, null: false
       end
     end
 

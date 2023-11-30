@@ -51,7 +51,7 @@ module Easyhooks
     extend ActiveSupport::Concern
 
     included do
-      after_commit :triggers
+      after_commit :dispatch_triggers
     end
 
     private
@@ -85,7 +85,9 @@ module Easyhooks
       end
     end
 
-    def triggers
+    def dispatch_triggers
+      return unless self.class.easyhooks_spec
+
       self.class.easyhooks_spec.triggers.each do |_, trigger|
         execute_trigger(trigger) if self.transaction_include_any_action?(trigger.on)
       end
